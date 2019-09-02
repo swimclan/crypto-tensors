@@ -5,11 +5,12 @@ const train = require('./train');
 const predict = require('./predict');
 const utils = require('./utils');
 const model = require('./model')(tf);
+require('dotenv').config();
 
 const app = express();
  
 const databus = {
-  url: 'http://hertham.com:4000/api',
+  url: `http://${process.env.DATABUS_HOST}:4000/api`,
   endpoints: {
     candles: {
       path: 'candles',
