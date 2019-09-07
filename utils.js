@@ -1,7 +1,7 @@
 const constants = require('./constants');
 
-function clean(data) {
-  const ret = data.slice(-constants.NUM_SAMPLES);
+function clean(data, samples) {
+  const ret = data.slice(-samples);
   ret.forEach((row) => {
     delete row.id;
     delete row.createdAt;

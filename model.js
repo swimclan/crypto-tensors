@@ -1,19 +1,26 @@
-module.exports = function(tf) {
+module.exports = function(tf, config) {
   const model = tf.sequential();
-  model.add(tf.layers.dense({units: 110, activation: 'relu', inputShape: [256]}));
-  model.add(tf.layers.dense({units: 93, activation: 'relu'}));
-  model.add(tf.layers.dense({units: 71, activation: 'relu'}));
-  model.add(tf.layers.dense({units: 66, activation: 'relu'}));
-  model.add(tf.layers.dense({units: 42, activation: 'relu'}));
-  model.add(tf.layers.dense({units: 21, activation: 'relu'}));
-  model.add(tf.layers.dense({units: 3, activation: 'relu'}));
+
+  const layers = config.layers;
+  const shape = config.shape;
+  const step = config.train.step;
+  const optimizer = config.train.optimizer;
+
+  console.log(shape, step, optimizer);
+
+  layers.forEach((layer, i) => {
+    if (i === 0) {
+      model.add(tf.layers.dense({units: layer.units, activation: layer.activation, inputShape: [shape]}));
+    } else {
+      model.add(tf.layers.dense({units: layer.units, activation: layer.activation}));
+    }
+  });
   
-  const stochasticGradientDescent = tf.train.sgd(0.025);
-  // const adamOptimizer = tf.train.adam(0.005);
+  const optimize = tf.train[optimizer](step);
   
   model.compile({
     loss: tf.losses.meanSquaredError,
-    optimizer: stochasticGradientDescent,
+    optimizer: optimize,
     metrics: ['accuracy']
   });
 
