@@ -1,5 +1,4 @@
 const utils = require('./utils');
-const constants = require('./constants');
 
 module.exports = function(tf, cleanedData, model, config, callback) {
   let change, percentChange = 0;

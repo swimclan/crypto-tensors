@@ -21,6 +21,21 @@ const databus = {
   }
 }
 
+const writeAccs = function(accs) {
+  return new Promise((resolve, reject) => {
+    const trainingOutputFile = path.join(__dirname, './training_output.txt');
+    const writestream = fs.createWriteStream(trainingOutputFile);
+    try {
+      writestream.write(JSON.stringify(accs));
+    } catch (err) {
+      writestream = null;
+      return reject(err);
+    };
+    writestream.on('close', resolve);
+    writestream.on('error', reject);
+  });
+}
+
 const getConfig = function() {
   return new Promise((resolve, reject) => {
     const configFile = path.join(__dirname, './config.json');
@@ -42,6 +57,25 @@ const getConfig = function() {
     readStream.on('data', function(data) {
       config += data;
     });
+  });
+}
+
+const getLastTrainingResult = function() {
+  return new Promise((resolve, reject) => {
+    let result = '';
+    const trainingFile = path.join(__dirname, './training_output.txt');
+    const readStream = fs.createReadStream(trainingFile);
+    readStream.on('data', function(data) {
+       result += data;
+    });
+    readStream.on('close', function() {
+      try {
+        return resolve(JSON.parse(result));
+      } catch (err) {
+        return reject(err);
+      }
+    });
+    readStream.on('error', reject);
   });
 }
 
@@ -67,6 +101,15 @@ app.get('/config', function(req, res){
   });
 });
 
+app.get('/train/result', function(req, res) {
+  getLastTrainingResult().then((result) => {
+
+    res.status(200).json(result);
+  }).catch((err) => {
+    res.status(500).json({error: err});
+  })
+})
+
 app.get('/train', function(req, res) {
   tf.tidy(function() {
     Promise.all([getConfig(), getCandleData(databus)])
@@ -83,6 +126,7 @@ app.get('/train', function(req, res) {
       train(tf, cleanedData, Model(tf, config), config, function({valAccs, result}) {
         console.log('done training');
         console.log(valAccs);
+        writeAccs(valAccs);
       });
     });
   });
